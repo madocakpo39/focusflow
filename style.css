@@ -776,3 +776,94 @@ body {
 ::-webkit-scrollbar { width:3px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border-md); border-radius:999px; }
+
+/* ── 24. MODAL DE CONFIRMATION ────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity .3s var(--ease);
+}
+.modal-overlay.open { opacity: 1; }
+
+.modal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px 24px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  transform: scale(.9) translateY(20px);
+  transition: transform .3s var(--spring);
+}
+.modal-overlay.open .modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.modal-icon {
+  font-size: 2.8rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -.02em;
+  text-align: center;
+  color: var(--text-1);
+}
+.modal-msg {
+  font-size: .85rem;
+  color: var(--text-2);
+  text-align: center;
+  line-height: 1.6;
+}
+.modal-msg strong { color: var(--text-1); }
+.modal-msg em     { color: var(--red); font-style: normal; font-weight: 600; }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+.modal-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: transform .15s, opacity .15s;
+}
+.modal-btn:active { transform: scale(.96); opacity: .85; }
+
+.modal-btn--cancel {
+  background: var(--bg-input);
+  border: 1px solid var(--border-md);
+  color: var(--text-2);
+}
+.modal-btn--cancel:hover { color: var(--text-1); background: var(--bg-card); }
+
+.modal-btn--danger {
+  background: var(--red-dim);
+  border: 1px solid rgba(248,113,113,.3);
+  color: var(--red);
+}
+.modal-btn--danger:hover { background: rgba(248,113,113,.22); }

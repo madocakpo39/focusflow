@@ -383,7 +383,7 @@ class UIManager {
     );
     var cid = objId;
     btnDel.addEventListener('click', function() {
-      if (window.confirm('Supprimer cet objectif ?')) self.app.supprimerObjectif(cid);
+      self.app.confirmerSuppression(cid);
     });
 
     this.els.topbarActs.appendChild(btnBack);
@@ -451,7 +451,26 @@ class UIManager {
     });
 
     this.els.list.innerHTML = '';
-    if (liste.length === 0) { this.els.emptyState.hidden = false; return; }
+
+    /* Correction : l'état vide "Aucun objectif ici" s'affiche seulement
+       si AUCUN objectif n'a jamais été créé.
+       Si des objectifs existent mais ne correspondent pas au filtre,
+       on affiche un message "Aucun résultat" discret à la place. */
+    if (liste.length === 0) {
+      if (objectifs.length === 0) {
+        this.els.emptyState.hidden = false;
+      } else {
+        this.els.emptyState.hidden = true;
+        var noMatch = document.createElement('div');
+        noMatch.className = 'empty-state';
+        noMatch.innerHTML =
+          '<span class="empty-state__emoji">🔍</span>' +
+          '<p class="empty-state__title">Aucun résultat</p>' +
+          '<p class="empty-state__hint">Essayez un autre filtre ou catégorie</p>';
+        this.els.list.appendChild(noMatch);
+      }
+      return;
+    }
     this.els.emptyState.hidden = true;
 
     for (var j = 0; j < liste.length; j++) {
@@ -1018,6 +1037,48 @@ class App {
     this.confetti.fire();
     this.ui.toast('🏆 Objectif terminé !', 'success', 4000);
   }
+  /* ── Modal de confirmation suppression (remplace window.confirm) ── */
+  confirmerSuppression(oid) {
+    var self = this;
+    var obj  = this._find(oid);
+    if (!obj) return;
+
+    /* Crée la modal */
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    var modal = document.createElement('div');
+    modal.className = 'modal-card';
+    modal.innerHTML =
+      '<div class="modal-icon">🗑️</div>' +
+      '<h3 class="modal-title">Supprimer l\'objectif ?</h3>' +
+      '<p class="modal-msg"><strong>' + obj.titre + '</strong><br/>' +
+      'Cette action supprimera aussi ses <strong>' + obj.taches.length + ' tâche(s)</strong> et ses notes.<br/>' +
+      'Elle est <em>irréversible</em>.</p>' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="modal-btn modal-btn--cancel" id="modalCancel">Annuler</button>' +
+        '<button type="button" class="modal-btn modal-btn--danger" id="modalConfirm">Supprimer</button>' +
+      '</div>';
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    /* Animation d'entrée */
+    requestAnimationFrame(function() { overlay.classList.add('open'); });
+
+    function close() {
+      overlay.classList.remove('open');
+      setTimeout(function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 300);
+    }
+
+    document.getElementById('modalCancel').addEventListener('click', close);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+    document.getElementById('modalConfirm').addEventListener('click', function() {
+      close();
+      self.supprimerObjectif(oid);
+    });
+  }
+
   supprimerObjectif(oid) {
     this.objectifs = this.objectifs.filter(function(o) { return o.id !== oid; });
     this._saveAndRender(); this.goHome();
