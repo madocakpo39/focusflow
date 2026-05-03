@@ -828,6 +828,11 @@ class App {
 
     this._initGreeting();
     this._initDateMin();
+    /* Masque immédiatement le bloc vide si des objectifs existent déjà */
+    if (this.objectifs.length > 0) {
+      var es = document.getElementById('emptyState');
+      if (es) es.hidden = true;
+    }
     this._bindNav();
     this._bindSheet();
     this._bindFilters();
@@ -975,12 +980,7 @@ class App {
     /* Reset */
     var btnReset = document.getElementById('btnReset');
     if (btnReset) btnReset.addEventListener('click', function() {
-      if (window.confirm('⚠️ Supprimer TOUS les objectifs ? Cette action est irréversible.')) {
-        self.objectifs = [];
-        self.storage.save(self.objectifs);
-        self.render();
-        self.ui.toast('🗑 Toutes les données supprimées', 'error');
-      }
+      self.confirmerResetTotal();
     });
   }
 
@@ -1076,6 +1076,50 @@ class App {
     document.getElementById('modalConfirm').addEventListener('click', function() {
       close();
       self.supprimerObjectif(oid);
+    });
+  }
+
+  /* ── Modal confirmation "Tout supprimer" ── */
+  confirmerResetTotal() {
+    var self  = this;
+    var total = this.objectifs.length;
+    if (total === 0) { this.ui.toast('Aucun objectif à supprimer.'); return; }
+
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    var modal = document.createElement('div');
+    modal.className = 'modal-card';
+    modal.innerHTML =
+      '<div class="modal-icon">⚠️</div>' +
+      '<h3 class="modal-title">Tout supprimer ?</h3>' +
+      '<p class="modal-msg">' +
+        'Vous êtes sur le point de supprimer <strong>' + total + ' objectif' + (total > 1 ? 's' : '') + '</strong>' +
+        ' et toutes leurs tâches.<br/><br/>' +
+        '<em>Cette action est irréversible.</em>' +
+      '</p>' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="modal-btn modal-btn--cancel" id="resetCancel">Annuler</button>' +
+        '<button type="button" class="modal-btn modal-btn--danger" id="resetConfirm">Tout supprimer</button>' +
+      '</div>';
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() { overlay.classList.add('open'); });
+
+    function close() {
+      overlay.classList.remove('open');
+      setTimeout(function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 300);
+    }
+
+    document.getElementById('resetCancel').addEventListener('click', close);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+    document.getElementById('resetConfirm').addEventListener('click', function() {
+      close();
+      self.objectifs = [];
+      self.storage.save(self.objectifs);
+      self.render();
+      self.ui.toast('🗑 Toutes les données supprimées', 'error', 3000);
     });
   }
 
